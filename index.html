@@ -15,40 +15,38 @@
 					viewport: 			{x: 1280, y: 720},
 					pixelsPerInch: 		{x: 76, y: 76},
 					qualityModifier:	{x: 2, y: 2},
-					sizeModifier:		{x: 2, y: 2},
+					squares:		 	{x: 68, y: 38},
 				};
 				
+				$('.resizable').attr('width', window.globals.squares.x * window.globals.pixelsPerInch.x * window.globals.qualityModifier.x);
+				$('.resizable').attr('height', window.globals.squares.y * window.globals.pixelsPerInch.y * window.globals.qualityModifier.y);
+		
 				//gamestate
 				window.state = {
-					position:	{x: 0, y: 0} //in squares
+					position:	{x: 0, y: 0}, //in squares
+					stored_position:	{x: 0, y: 0} //in squares, todo rename: is positie die wordt opgeslagen bij uitzoomen, om terug in te kunnen zoomen op zelfde positie
 				}
 
 				//receive commands, act on them
 				var socket = io('http://'+window.location.hostname+':3000');
 				socket.on('display', function(message){
-						if (typeof message.instruction !== 'undefined') {
-							if (message.instruction.type == 'moveViewport') {
-								if (message.instruction.data.direction == 'left') {
-									setPositionX(parseInt(state.position.x) + parseInt(message.instruction.data.value));
-								}
-								else if (message.instruction.data.direction == 'right') {
-									setPositionX(parseInt(state.position.x) - parseInt(message.instruction.data.value));
-								}
-								else if (message.instruction.data.direction == 'up') {
-									setPositionY(parseInt(state.position.y) + parseInt(message.instruction.data.value));
-								}
-								else if (message.instruction.data.direction == 'down') {
-									setPositionY(parseInt(state.position.y) - parseInt(message.instruction.data.value));
-								}
+					if (typeof message.instruction !== 'undefined') {
+						if (message.instruction.type == 'moveViewport') {
+								moveViewPort(parseInt(message.instruction.data.value.x), parseInt(message.instruction.data.value.y));
+						}
+						else if (message.instruction.type == 'zoom') {
+							if (message.instruction.data.value == 'real') {
+								zoomReal();
+							}
+							else if (message.instruction.data.value == 'fullscreen') {
+								zoomFullscreen()
 							}
 						}
 					}
-				);
+				});
 
 				//grid
-				settings = renderGrid($('#grid')[0], globals);
-				settings.globals = globals;
-				renderBorder($('#grid')[0], $.extend({}, settings));
+				renderGrid($('#grid')[0]);
 
 				//initial drawings
 				var sources = {
@@ -58,67 +56,39 @@
 				};
 
 				loadImages(sources, function(images) {
-					console.log('images loaded...');
-					var canvas = $('#background')[0];
+					var canvas = $('#layer_0')[0];
 					var context = canvas.getContext("2d");
-					var o = {
-						closed: true,
-						fill: true,
-						points: false,
-						segments: 100,
-						tension: 0.5,
-					};
-					
+
+					/*
 					context.save()
-					context.rect(0, 0, canvas.width, canvas.height);
-					var pattern = context.createPattern(images.water, 'repeat');
+					context.rect(
+						-1 * (window.globals.pixelsPerInch.x * window.globals.qualityModifier.x), 
+						-1 * (window.globals.pixelsPerInch.y * window.globals.qualityModifier.y), 
+						canvas.width, 
+						canvas.height
+					);
+					var pattern = context.createPattern(images.sand, 'repeat');
 					context.fillStyle = pattern;
-					context.scale(globals.sizeModifier.x, globals.sizeModifier.y);
 					context.fill();
 					context.restore()
+					*/
 
-					var pointsInSquares = 	[
-												{x: 13, y: 4},
-												{x: 21, y: 5},
-												{x: 28, y: 6},
-												{x: 38, y: 5},
-												{x: 47, y: 4},
-												{x: 53, y: 3},
-												{x: 55, y: 9},
-												{x: 53, y: 13},
-												{x: 49, y: 14},
-												{x: 49, y: 19},
-												{x: 54, y: 28},
-												{x: 47, y: 32},
-												{x: 35, y: 22},
-												{x: 29, y: 32},
-												{x: 21, y: 36},
-												{x:  9, y: 30},
-												{x: 17, y: 22},
-												{x:  9, y:  7},
-											];
-					var points = [];
-					for (var i = 0; i < pointsInSquares.length; i++) {
-						points.push({
-							x: settings.offset.x1 + (Math.floor(pointsInSquares[i].x *  globals.sizeModifier.x) * globals.pixelsPerInch.x / globals.sizeModifier.x),
-							y: settings.offset.y1 + (Math.floor(pointsInSquares[i].y *  globals.sizeModifier.y) * globals.pixelsPerInch.y / globals.sizeModifier.y),
-						});
-					}
-
-					context.beginPath();
-					context.moveTo(points[0].x, points[0].y);
-					context.curve(points, o.tension, o.segments, o.closed);
+					/*
+					grid = [
+						{x:  5, y:  5, type: 'move'},
+						{x:  5, y: -5, type: 'line'},
+						{x: -5, y: -5, type: 'line'},
+						{x: -5, y:  5, type: 'line'},
+					];
+					settings = {canvas, grid, fillStyle: "rgba(0, 0, 0, 0.75)"}
+					render(canvas, grid, settings);
+					*/
 					context.save()
-					var pattern = context.createPattern(images.forest, 'repeat');
-					context.fillStyle = pattern;
-					context.scale(globals.sizeModifier.x, globals.sizeModifier.y);
-					context.fill();
+					renderNumbers(canvas);
 					context.restore()
-					context.strokeStyle = "rgba(0, 0, 0, 1)";
-					context.lineWidth = 4;
-					context.stroke();
 					
-					// renderNumbers(canvas);
+					console.log(getGridDimensions());
+					console.log(getViewportGridDimensions());
 				});
 			});
 		</script>
@@ -128,11 +98,10 @@
 			<div class='background'>
 			</div>
 			<div class='canvas_wrapper'>
-				<!-- = viewport * quality modifier * sizeModifier (= breedteverhouding tussen aantal zichtbare en totaal aantal squares) -->
-				<canvas id="background" width='5120' height='2880' />
+				<canvas id="layer_0" class="resizable" />
 			</div>
 			<div class='canvas_wrapper'>
-				<canvas id="grid" width='2560' height='1440' />
+				<canvas id="grid" class="resizable" />
 			</div>
 		</div>
 	</body>
