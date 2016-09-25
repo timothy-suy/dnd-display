@@ -1,107 +1,37 @@
 <html>
-	<!-- temporary script to test communications-setup -->
+	<!-- version 0.1: data more structured, but no communication with api yet. -->
 	<head>
 		<script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
 		<script src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 		<script src="https://cdn.socket.io/socket.io-1.3.4.js"></script>
 		<script src="../script/display.js"></script>
+		<script src="../script/connection.js"></script>
+		<script src="../script/instruction.js"></script>
+		<script src="../script/state.js"></script>
+		<script src="../script/map.js"></script>
+		<script src="../script/viewport.js"></script>
+
 		<script src="../script/curve.js"></script>
 
 		<link rel="stylesheet" type="text/css" href="../css/display.css">
 		<script>
 			$(function () {
-				//globals settings
-				window.globals = {
-					viewport: 			{x: 1280, y: 720},
-					pixelsPerInch: 		{x: 76, y: 76},
-					qualityModifier:	{x: 2, y: 2},
-					squares:		 	{x: 68, y: 38},
-				};
+				renderMap();
 				
-				$('.resizable').attr('width', window.globals.squares.x * window.globals.pixelsPerInch.x * window.globals.qualityModifier.x);
-				$('.resizable').attr('height', window.globals.squares.y * window.globals.pixelsPerInch.y * window.globals.qualityModifier.y);
-		
-				//gamestate
-				window.state = {
-					position:	{x: 0, y: 0}, //in squares
-					stored_position:	{x: 0, y: 0} //in squares, todo rename: is positie die wordt opgeslagen bij uitzoomen, om terug in te kunnen zoomen op zelfde positie
-				}
-
-				//receive commands, act on them
-				var socket = io('http://'+window.location.hostname+':3000');
-				socket.on('display', function(message){
-					if (typeof message.instruction !== 'undefined') {
-						if (message.instruction.type == 'moveViewport') {
-								moveViewPort(parseInt(message.instruction.data.value.x), parseInt(message.instruction.data.value.y));
-						}
-						else if (message.instruction.type == 'zoom') {
-							if (message.instruction.data.value == 'real') {
-								zoomReal();
-							}
-							else if (message.instruction.data.value == 'fullscreen') {
-								zoomFullscreen()
-							}
-						}
-					}
-				});
-
-				//grid
-				renderGrid($('#grid')[0]);
-
-				//initial drawings
-				var sources = {
-					water:  	'../images/render/water1.jpg',
-					sand:  		'../images/render/sand1.jpg',
-					forest:  	'../images/render/forest3.jpg',
-				};
-
-				loadImages(sources, function(images) {
-					var canvas = $('#layer_0')[0];
-					var context = canvas.getContext("2d");
-
-					/*
-					context.save()
-					context.rect(
-						-1 * (window.globals.pixelsPerInch.x * window.globals.qualityModifier.x), 
-						-1 * (window.globals.pixelsPerInch.y * window.globals.qualityModifier.y), 
-						canvas.width, 
-						canvas.height
-					);
-					var pattern = context.createPattern(images.sand, 'repeat');
-					context.fillStyle = pattern;
-					context.fill();
-					context.restore()
-					*/
-
-					/*
-					grid = [
-						{x:  5, y:  5, type: 'move'},
-						{x:  5, y: -5, type: 'line'},
-						{x: -5, y: -5, type: 'line'},
-						{x: -5, y:  5, type: 'line'},
-					];
-					settings = {canvas, grid, fillStyle: "rgba(0, 0, 0, 0.75)"}
-					render(canvas, grid, settings);
-					*/
-					context.save()
-					renderNumbers(canvas);
-					context.restore()
-					
-					console.log(getGridDimensions());
-					console.log(getViewportGridDimensions());
-				});
+				//debug
+				var canvas = $('#grid')[0];
+				var context = canvas.getContext("2d");
+				context.save()
+				context.rect(100, 100, 100, 100);
+				context.fillStyle = 'rgba(255, 0, 127, 0.5)';
+				context.fill();
+				context.restore()
 			});
 		</script>
 	</head>
 	<body>
 		<div id='content' style='text-align: center'>
 			<div class='background'>
-			</div>
-			<div class='canvas_wrapper'>
-				<canvas id="layer_0" class="resizable" />
-			</div>
-			<div class='canvas_wrapper'>
-				<canvas id="grid" class="resizable" />
 			</div>
 		</div>
 	</body>
