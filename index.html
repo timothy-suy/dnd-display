@@ -8,21 +8,71 @@
 		<script src="../script/connection.js"></script>
 		<script src="../script/instruction.js"></script>
 
-		<script src="../script/display.js"></script>
-		<script src="../script/viewport.js"></script>
-
 		<script src="../script/game.js"></script>
+
+		<script src="../script/displaySetting.js"></script>
+		<script src="../script/viewport.js"></script>
+		<script src="../script/square.js"></script>
+
 		<script src="../script/map.js"></script>
 		<script src="../script/layer.js"></script>
 		<script src="../script/graphic.js"></script>
+
+		<script src="../script/object.js"></script>
+		<script src="../script/objectSetting.js"></script>
 
 		<script src="../script/curve.js"></script>
 
 		<link rel="stylesheet" type="text/css" href="../css/display.css">
 		<script>
 			$(function () {
-				var currentGame = getGame();
-				renderGame(currentGame);
+				window.game = new Game(1, 'game');
+				var displaySetting = new DisplaySetting(1, 'default setting', 37, 20.5, 2, 1280, 720);
+
+				var map = new Map(1, 'map', 100, 100);
+					// map.addLayer(new Layer(1, 'floor', 100));
+					// map.addLayer(new Layer(2, 'items', 200));
+					var grid = new Layer(3, 'grid',  300);
+						var graphic = new Graphic(1, 'gridGraphic');
+							var gridObject = new Object(1, 'gridObject', new ObjectSetting(1, 'gridObjectSetting', 'rgba(0, 0, 0, 0.75)', null, 1));
+								for (var X = 0; X < map.width; X++) {
+									for (var Y = 0; Y < map.height; Y++) {
+										gridObject.addDrawable({type: 'move', x:			   					  0, y: parseInt(Y * displaySetting.square.height)});
+										gridObject.addDrawable({type: 'line', x: parseInt(map.width * displaySetting.square.width), y: parseInt(Y * displaySetting.square.height)});
+										gridObject.addDrawable({type: 'move', x: parseInt(X * displaySetting.square.width), y: 								  0});
+										gridObject.addDrawable({type: 'line', x: parseInt(X * displaySetting.square.width), y: parseInt(map.height * displaySetting.square.height)});
+									}
+								}
+							graphic.addObject(gridObject);
+
+							var debug = new Object(1, 'gridObject', new ObjectSetting(1, 'gridObjectSetting', 'rgba(255, 0, 0, 0.75)', 'rgba(0, 255, 0, 0.5)'));
+								debug.addDrawable({type: 'move', x:     displaySetting.square.width, y:     displaySetting.square.height});
+								debug.addDrawable({type: 'line', x:     displaySetting.square.width, y: 2 * displaySetting.square.height});
+								debug.addDrawable({type: 'line', x: 2 * displaySetting.square.width, y: 2 * displaySetting.square.height});
+								debug.addDrawable({type: 'line', x: 2 * displaySetting.square.width, y:     displaySetting.square.height});
+								debug.addDrawable({type: 'line', x:     displaySetting.square.width, y:     displaySetting.square.height});
+							graphic.addObject(debug);
+							debug = new Object(1, 'gridObject', new ObjectSetting(1, 'gridObjectSetting', 'rgba(255, 0, 0, 0.75)', 'rgba(255, 0, 0, 0.5)'));
+								debug.addDrawable({type: 'move', x:     (map.width - 1) * displaySetting.square.width, y:     displaySetting.square.height});
+								debug.addDrawable({type: 'line', x:     (map.width - 1) * displaySetting.square.width, y: 2 * displaySetting.square.height});
+								debug.addDrawable({type: 'line', x: 2 * displaySetting.square.width, y: 2 * displaySetting.square.height});
+								debug.addDrawable({type: 'line', x: 2 * displaySetting.square.width, y:     displaySetting.square.height});
+								debug.addDrawable({type: 'line', x:     displaySetting.square.width, y:     displaySetting.square.height});
+							graphic.addObject(debug);
+
+
+
+						grid.addGraphic(graphic);
+					map.addLayer(grid);
+
+				game.setMap(map);
+				game.setDisplaySetting(displaySetting);
+				// game.setViewport(new Viewport(1, 'viewport_all', 0, 0, game.map.width, game.map.height));
+				game.setViewport(new Viewport(1, 'viewport_1:1', 0, 0, game.displaySetting.width, game.displaySetting.height));
+				game.render();
+				
+				
+
 			});
 		</script>
 	</head>
