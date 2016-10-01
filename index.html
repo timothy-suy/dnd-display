@@ -5,71 +5,73 @@
 		<script src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 		<script src="https://cdn.socket.io/socket.io-1.3.4.js"></script>
 
-		<script src="../script/connection.js"></script>
+		<script src="../script/state.js"></script>
 		<script src="../script/instruction.js"></script>
-
+		
 		<script src="../script/game.js"></script>
-
 		<script src="../script/displaySetting.js"></script>
 		<script src="../script/viewport.js"></script>
 		<script src="../script/square.js"></script>
-
 		<script src="../script/map.js"></script>
 		<script src="../script/layer.js"></script>
 		<script src="../script/graphic.js"></script>
-
-		<script src="../script/object.js"></script>
-		<script src="../script/objectSetting.js"></script>
+		<script src="../script/path.js"></script>
+		<script src="../script/pathSetting.js"></script>
+		<script src="../script/picture.js"></script>
 
 		<script src="../script/curve.js"></script>
 
 		<link rel="stylesheet" type="text/css" href="../css/display.css">
 		<script>
 			$(function () {
-				window.game = new Game(1, 'game');
-				var displaySetting = new DisplaySetting(1, 'default setting', 37, 20.5, 2, 1280, 720);
 
-				var map = new Map(1, 'map', 100, 100);
-					// map.addLayer(new Layer(1, 'floor', 100));
-					// map.addLayer(new Layer(2, 'items', 200));
-					var grid = new Layer(3, 'grid',  300);
-						var graphic = new Graphic(1, 'gridGraphic');
-							var gridObject = new Object(1, 'gridObject', new ObjectSetting(1, 'gridObjectSetting', 'rgba(0, 0, 0, 0.75)', null, 1));
-								for (var X = 0; X < map.width; X++) {
-									for (var Y = 0; Y < map.height; Y++) {
-										gridObject.addDrawable({type: 'move', x:			   					  0, y: parseInt(Y * displaySetting.square.height)});
-										gridObject.addDrawable({type: 'line', x: parseInt(map.width * displaySetting.square.width), y: parseInt(Y * displaySetting.square.height)});
-										gridObject.addDrawable({type: 'move', x: parseInt(X * displaySetting.square.width), y: 								  0});
-										gridObject.addDrawable({type: 'line', x: parseInt(X * displaySetting.square.width), y: parseInt(map.height * displaySetting.square.height)});
-									}
+				window.state = new State();
+				var teller = 1;
+				window.state.setGame(new Game(1, 'window.state.game'));
+				window.state.setMap(new Map(1, 'window.state.map', 74, 41));
+				window.state.setDisplaySettings(new DisplaySetting(1, 'default setting', 37, 20.5, 2, 1280, 720));
+				window.state.setCurrentViewport(new Viewport(2, 'viewport_1:1', 0, 0, window.state.displaySetting.width, window.state.displaySetting.height));
+				window.state.setCurrentViewport(new Viewport(1, 'viewport_all', 0, 0, window.state.map.width, window.state.map.height));
+
+				window.state.map.addLayer(new Layer(1, 'floor', 100));
+
+				var items = new Layer(2, 'items',  200);
+					var graphic = new Graphic(2, 'pictureTest');
+						graphic.addObject(new Picture('../images/render/monster1.png'));
+						graphic.addObject(new Picture('../images/render/arch1.png'));
+					items.addGraphic(graphic);
+				window.state.map.addLayer(items);
+
+				var grid = new Layer(3, 'grid',  300);
+					var graphic = new Graphic(1, 'gridGraphic');
+						var gridPath = new Path(1, 'gridPath', new PathSetting(1, 'gridPathSetting', 'rgba(0, 0, 0, 0.75)', null, 1));
+							for (var X = 0; X < window.state.map.width; X++) {
+								for (var Y = 0; Y < window.state.map.height; Y++) {
+									gridPath.addPathPart({type: 'move', x:			   						 					    	0, y: parseInt(Y * window.state.displaySetting.square.height)});
+									gridPath.addPathPart({type: 'line', x: parseInt(window.state.map.width * window.state.displaySetting.square.width), y: parseInt(Y * window.state.displaySetting.square.height)});
+									gridPath.addPathPart({type: 'move', x: parseInt(X * window.state.displaySetting.square.width)					 , y: 0});
+									gridPath.addPathPart({type: 'line', x: parseInt(X * window.state.displaySetting.square.width)					 , y: parseInt(window.state.map.height * window.state.displaySetting.square.height)});
 								}
-							graphic.addObject(gridObject);
-
-							var debug = new Object(1, 'gridObject', new ObjectSetting(1, 'gridObjectSetting', 'rgba(255, 0, 0, 0.75)', 'rgba(0, 255, 0, 0.5)'));
-								debug.addDrawable({type: 'move', x:     displaySetting.square.width, y:     displaySetting.square.height});
-								debug.addDrawable({type: 'line', x:     displaySetting.square.width, y: 2 * displaySetting.square.height});
-								debug.addDrawable({type: 'line', x: 2 * displaySetting.square.width, y: 2 * displaySetting.square.height});
-								debug.addDrawable({type: 'line', x: 2 * displaySetting.square.width, y:     displaySetting.square.height});
-								debug.addDrawable({type: 'line', x:     displaySetting.square.width, y:     displaySetting.square.height});
+							}
+							graphic.addObject(gridPath);
+							var debug = new Path(1, 'gridPath', new PathSetting(1, 'gridPathSetting', 'rgba(255, 0, 0, 0.75)', 'rgba(0, 255, 0, 0.5)'));
+								debug.addPathPart({type: 'move', x:     window.state.displaySetting.square.width, y:     window.state.displaySetting.square.height});
+								debug.addPathPart({type: 'line', x:     window.state.displaySetting.square.width, y: 2 * window.state.displaySetting.square.height});
+								debug.addPathPart({type: 'line', x: 2 * window.state.displaySetting.square.width, y: 2 * window.state.displaySetting.square.height});
+								debug.addPathPart({type: 'line', x: 2 * window.state.displaySetting.square.width, y:     window.state.displaySetting.square.height});
+								debug.addPathPart({type: 'line', x:     window.state.displaySetting.square.width, y:     window.state.displaySetting.square.height});
 							graphic.addObject(debug);
-							debug = new Object(1, 'gridObject', new ObjectSetting(1, 'gridObjectSetting', 'rgba(255, 0, 0, 0.75)', 'rgba(255, 0, 0, 0.5)'));
-								debug.addDrawable({type: 'move', x:     (map.width - 1) * displaySetting.square.width, y:     displaySetting.square.height});
-								debug.addDrawable({type: 'line', x:     (map.width - 1) * displaySetting.square.width, y: 2 * displaySetting.square.height});
-								debug.addDrawable({type: 'line', x: 2 * displaySetting.square.width, y: 2 * displaySetting.square.height});
-								debug.addDrawable({type: 'line', x: 2 * displaySetting.square.width, y:     displaySetting.square.height});
-								debug.addDrawable({type: 'line', x:     displaySetting.square.width, y:     displaySetting.square.height});
+							debug = new Path(1, 'gridPath', new PathSetting(1, 'gridPathSetting', 'rgba(255, 0, 0, 0.75)', 'rgba(255, 0, 0, 0.5)'));
+								debug.addPathPart({type: 'move', x:     (window.state.map.width - 1) * window.state.displaySetting.square.width, y:     window.state.displaySetting.square.height});
+								debug.addPathPart({type: 'line', x:     (window.state.map.width - 1) * window.state.displaySetting.square.width, y: 2 * window.state.displaySetting.square.height});
+								debug.addPathPart({type: 'line', x: 2 * window.state.displaySetting.square.width, y: 2 * window.state.displaySetting.square.height});
+								debug.addPathPart({type: 'line', x: 2 * window.state.displaySetting.square.width, y:     window.state.displaySetting.square.height});
+								debug.addPathPart({type: 'line', x:     window.state.displaySetting.square.width, y:     window.state.displaySetting.square.height});
 							graphic.addObject(debug);
-
-
-
 						grid.addGraphic(graphic);
-					map.addLayer(grid);
+					window.state.map.addLayer(grid);
 
-				game.setMap(map);
-				game.setDisplaySetting(displaySetting);
-				// game.setViewport(new Viewport(1, 'viewport_all', 0, 0, game.map.width, game.map.height));
-				game.setViewport(new Viewport(1, 'viewport_1:1', 0, 0, game.displaySetting.width, game.displaySetting.height));
-				game.render();
+				window.state.map.render();
 				
 				
 
